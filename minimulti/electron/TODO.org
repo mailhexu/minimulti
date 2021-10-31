@@ -1,0 +1,17 @@
+* TODO Change eigen value index order
+** TODO plot unfolded band
+** TODO DOS
+** TODO plot band weight
+** TODO COHP 
+** TODO COHP fat band
+** TODO EPC fat band
+** TODO EPC DOS
+
+* TODO add nband instead of using norb
+
+
+* TODO Implement collinear spin density matrix/ density.
+
+  
+
+

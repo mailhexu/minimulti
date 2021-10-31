@@ -1,0 +1,9 @@
+numpy
+scipy
+matplotlib
+ase
+numba
+tbmodels
+netcdf4
+ipyvolumn
+jupyter
