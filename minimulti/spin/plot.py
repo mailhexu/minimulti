@@ -1,17 +1,54 @@
 #!/usr/bin/env python
 from __future__ import division
+from ase.dft.kpoints import *
+import ase
 from ase.atoms import Atoms
 from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.linalg
-from ase.geometry import cell_to_cellpar, crystal_structure_from_cell, cellpar_to_cell
+from ase.geometry import cell_to_cellpar, cellpar_to_cell
 from ase.dft.kpoints import (get_special_points, bandpath, special_paths,
                              parse_path_string)
 #from minimulti.spin.hamiltonian import SpinHamiltonian
 from minimulti.spin.mover import SpinMover
 from minimulti.spin.qsolver import QSolver
 from minimulti.constants import mu_B, meV
+
+
+def group_band_path(bp, eps=1e-8, shift=0.15):
+    xs, Xs, knames = bp.get_linear_kpoint_axis()
+    kpts = bp.kpts
+
+    m = (xs[1:]-xs[:-1] < eps)
+    segments = [0]+list(np.where(m)[0]+1)+[len(xs)]
+
+    # split Xlist
+    xlist, kptlist = [], []
+    for i, (start, end) in enumerate(zip(segments[:-1], segments[1:])):
+        kptlist.append(kpts[start:end])
+        xlist.append(xs[start:end]+i*shift)
+
+    m = (Xs[1:]-Xs[:-1] < eps)
+
+    s = np.where(m)[0] + 1
+
+    for i in s:
+        Xs[i:] += shift
+
+    return xlist, kptlist, Xs, knames
+
+
+def test_group_band_path():
+    atoms = ase.Atoms('H', cell=[1, 1, 2])
+    bp = atoms.cell.bandpath(npoints=50)
+    xlist, kptlist, Xs, knames = group_band_path(bp)
+
+    for x, k in zip(xlist, kptlist):
+        plt.plot(x, x)
+
+    plt.xticks(Xs, knames)
+    plt.show()
 
 
 def plot_3d_vector(positions, vectors, length=0.1):
@@ -40,7 +77,7 @@ def plot_2d_vector(positions, vectors, show_z=True, length=0.1, ylimit=None):
     n = positions.shape[1]
     x, y, z = positions.T
     u, v, w = vectors.T
-    #ax.streamplot(x, y, u, v,  linewidth=1, cmap=plt.cm.inferno,
+    # ax.streamplot(x, y, u, v,  linewidth=1, cmap=plt.cm.inferno,
     #    density=2, arrowstyle='->', arrowsize=1.5)
     ax.scatter(x, y, s=50, color='r')
     if show_z:
@@ -59,7 +96,7 @@ def plot_2d_vector(positions, vectors, show_z=True, length=0.1, ylimit=None):
         ax.quiver(x, y, u, v, units='width', pivot='middle', cmap='seismic')
     if ylimit is not None:
         ax.set_ylim(ylimit[0], ylimit[1])
-    #plt.colorbar()
+    # plt.colorbar()
     plt.xlabel('x')
     plt.ylabel('y')
     plt.show()
@@ -84,10 +121,10 @@ def plot_supercell(ham,
         plot_3d_vector(pos, mover.s, length=length)
 
 
-#exchange_1d()
+# exchange_1d()
 
-from ase.dft.kpoints import *
-def bandpath(path, cell, npoints=50, eps=1e-3):
+
+def mybandpath(path, cell, npoints=50, eps=1e-3):
     """Make a list of kpoints defining the path between the given points.
 
     path: list or str
@@ -104,8 +141,8 @@ def bandpath(path, cell, npoints=50, eps=1e-3):
     Return list of k-points, list of x-coordinates and list of
     x-coordinates of special points."""
 
-    if isinstance(path, basestring):
-        special = get_special_points(cell,eps=eps)
+    if isinstance(path, str):
+        special = get_special_points(cell, eps=eps)
         paths = []
         for names in parse_path_string(path):
             paths.append([special[name] for name in names])
@@ -141,85 +178,13 @@ def bandpath(path, cell, npoints=50, eps=1e-3):
 
     return np.array(kpts), np.array(x), np.array(X)
 
-def fix_cell(cell,eps=5e-3):
-    cellpar=cell_to_cellpar(cell)
-    for i in [3,4,5]:
-        if abs(cellpar[i]/90.0*np.pi/2-np.pi/2)<eps:
-            cellpar[i]=90.0
+
+def fix_cell(cell, eps=5e-3):
+    cellpar = cell_to_cellpar(cell)
+    for i in [3, 4, 5]:
+        if abs(cellpar[i]/90.0*np.pi/2-np.pi/2) < eps:
+            cellpar[i] = 90.0
     return cellpar_to_cell(cellpar)
-    
-
-def plot_magnon_band(ham,
-                     kvectors=np.array([[0, 0, 0], [0.5, 0, 0], [0.5, 0.5, 0],
-                                        [0, 0, 0], [.5, .5, .5]]),
-                     knames=['$\Gamma$', 'X', 'M', '$\Gamma$', 'R'],
-                     supercell_matrix=None,
-                     npoints=100,
-                     color='red',
-                     ax=None,
-                     eps=1e-3,
-                     kpath_fname=None):
-    if ax is None:
-        fig, ax = plt.subplots()
-    if knames is None or kvectors is None:
-        from ase.build.tools import niggli_reduce_cell
-        rcell, M = niggli_reduce_cell(ham.cell)
-        fcell = fix_cell(ham.cell, eps=eps)
-        lattice_type = crystal_structure_from_cell(rcell, eps=eps, niggli_reduce=False)
-        labels = parse_path_string(special_paths[lattice_type])
-        knames = [item for sublist in labels for item in sublist]
-        kpts, x, X = bandpath(
-            special_paths[lattice_type], rcell, npoints=npoints, eps=1e-8)
-
-        spk = get_special_points(ham.cell,eps=1e-8)
-    else:
-        kpts, x, X = bandpath(kvectors, fix_cell(ham.cell), npoints)
-        spk = dict(zip(knames, kvectors))
-
-    if supercell_matrix is not None:
-        kvectors = [np.dot(k, supercell_matrix) for k in kvectors]
-
-    qsolver = QSolver(hamiltonian=ham)
-    evals, evecs = qsolver.solve_all(kpts, eigen_vectors=True)
-    nbands = evals.shape[1]
-    #evecs
-
-    imin=np.argmin(evals[:,0])
-    emin=np.min(evals[:,0])
-    nspin=evals.shape[1]//3
-    evec_min=evecs[imin,:,0].reshape(nspin,3)
-
-
-    # write information to file
-    if kpath_fname is not None:
-        with open(kpath_fname, 'w') as myfile:
-            myfile.write("K-points:\n")
-            for name, k in spk.items():
-                myfile.write("%s: %s\n" % (name, k))
-            myfile.write("\nThe energy minimum is at:")
-            myfile.write("%s\n"%kpts[np.argmin(evals[:,0])])
-            for i, ev in enumerate(evec_min):
-                myfile.write("spin %s: %s \n"%(i, ev/np.linalg.norm(ev)))
-    print("\nThe energy minimum is at:")
-    print("%s\n"%kpts[np.argmin(evals[:,0])])
-    print("\n The ground state is:")
-    for i, ev in enumerate(evec_min):
-        print("spin %s: %s"%(i, ev/np.linalg.norm(ev)))
-
-
-
-    for i in range(nbands):
-        ax.plot(x, (evals[:, i]-emin) / 1.6e-22)
-    ax.set_xlabel('Q-point')
-    ax.set_ylabel('Energy (meV)')
-    ax.set_xlim(x[0], x[-1])
-    ax.set_ylim(0)
-    ax.set_xticks(X)
-    ax.set_xticklabels(knames)
-
-    for x in X:
-        ax.axvline(x, linewidth=0.6, color='gray')
-    return ax
 
 
 def plot_M_vs_time(ham, supercell_matrix=np.eye(3), temperature=0):
@@ -248,7 +213,7 @@ def plot_M_vs_time(ham, supercell_matrix=np.eye(3), temperature=0):
     plt.xlabel('time (s)')
     plt.ylabel('magnetic moment ($\mu_B$)')
     plt.legend()
-    #plt.show()
+    # plt.show()
     #avg_total_m = np.average((np.linalg.norm(tspin, axis=1)/Ms)[:])
     plt.show()
 
@@ -261,7 +226,7 @@ def plot_M_vs_T(ham, supercell_matrix=np.eye(3), Tlist=np.arange(0.0, 110,
         mover = SpinMover(hamiltonian=sc_ham)
         mover.set(
             time_step=2e-4,
-            #damping_factor=0.1,
+            # damping_factor=0.1,
             temperature=temperature,
             total_time=1,
             save_all_spin=True)

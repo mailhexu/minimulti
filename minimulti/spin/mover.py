@@ -34,7 +34,7 @@ def get_ds_DM(nspin, Heff, gamma_L, gilbert_damping, s, dt, ds):
     for i in numba.prange(nspin):
         Hr = gamma_L[i] * (
             Heff[i, :] + gilbert_damping[i] * cross(s[i, :], Heff[i, :]))
-        #Bnorm=np.linalg.norm(Hr)
+        # Bnorm=np.linalg.norm(Hr)
         Bnorm = np.sqrt(Hr[0] * Hr[0] + Hr[1] * Hr[1] + Hr[2] * Hr[2])
         axis = Hr / Bnorm  # axis
         half_angle = Bnorm * dt * 0.5  # half angle
@@ -132,7 +132,7 @@ class SpinMover(object):
             self.H_lang = np.random.randn(self.nspin, 3) * np.expand_dims(
                 self._langevin_tmp, axis=1)
 
-    #@profile
+    # @profile
     def get_ds_HeunP(self, Heff, ds):
         """
         calculate Delta S for a time step delta_t
@@ -172,6 +172,7 @@ class SpinMover(object):
         # predict
         self.hamiltonian.get_effective_field(self.s, self.Heff1)
         self.Heff1 /= self.ms[:, None]
+
         self.Heff = self.Heff1 + self.H_lang
         self.get_ds_HeunP(self.Heff, self._ds0)
         self._ds0 += self.s
@@ -181,7 +182,7 @@ class SpinMover(object):
         self.hamiltonian.get_effective_field(self._ds0, self.Heff2)
         self.Heff2 /= self.ms[:, None]
         self.Heff = (self.Heff1 + self.Heff2) * 0.5 + self.H_lang
-        self.get_ds_DM(self.Heff, self.ds)
+        self.get_ds_HeunP(self.Heff, self.ds)
         self.s += self.ds
         normalize(self.s, self.nspin)
 
@@ -242,7 +243,8 @@ class SpinMover(object):
         self.current_time = self.current_time + self.dt
         self.current_s = self.s
         if write_hist:
-            self.histfile.write_S(S=self.s, time=self.current_time, itime=itime)
+            self.histfile.write_S(
+                S=self.s, time=self.current_time, itime=itime)
 
     def run(self, write_step=1, method='HeunP'):
         """
@@ -259,7 +261,6 @@ class SpinMover(object):
             else:
                 self.run_one_step(
                     method=method, write_hist=False, time=time, itime=i)
-
 
     def set_MH_signal(self, Hext_list):
         """

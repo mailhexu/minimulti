@@ -5,7 +5,6 @@ import numpy as np
 from collections import OrderedDict, defaultdict
 from itertools import product
 from functools import lru_cache
-import numba
 
 
 def close_to_int(x, tol=1e-4):
@@ -65,7 +64,7 @@ class SupercellMaker(object):
         maxrep = np.ceil(np.max(scorners, axis=0)).astype('int') + 1
 
         # sc_vec: supercell vector (map atom from unit cell to supercell)
-        #for vec in product(range(rep[0]), range(rep[1]), range(rep[2])):
+        # for vec in product(range(rep[0]), range(rep[1]), range(rep[2])):
         for vec in product(range(minrep[0], maxrep[0]),
                            range(minrep[1], maxrep[1]),
                            range(minrep[2], maxrep[2])):
@@ -197,7 +196,7 @@ class SupercellMaker(object):
         sc_Rjlist = []
         for c, cur_sc_vec in enumerate(
                 self.sc_vec):  # go over all super-cell vectors
-            #for i , j, ind_R, val in
+            # for i , j, ind_R, val in
             for j, Rj in zip(jlist, Rjlist):
                 sc_part, pair_ind = self._sc_R_to_pair_ind(
                     tuple(Rj + cur_sc_vec))
@@ -221,7 +220,7 @@ class SupercellMaker(object):
         ret_dict = OrderedDict()
         for c, cur_sc_vec in enumerate(
                 self.sc_vec):  # go over all super-cell vectors
-            #for i , j, ind_R, val in
+            # for i , j, ind_R, val in
             for (i, j, ind_R), val in terms.items():
                 sc_part, pair_ind = self._sc_R_to_pair_ind(
                     tuple(ind_R + cur_sc_vec))
@@ -247,7 +246,7 @@ class SupercellMaker(object):
         sc_HR = []
         for c, cur_sc_vec in enumerate(
                 self.sc_vec):  # go over all super-cell vectors
-            #for i , j, ind_R, val in
+            # for i , j, ind_R, val in
             for iR, R in enumerate(Rlist):
                 H = HR[iR]
                 sc_part, pair_ind = self._sc_R_to_pair_ind(
@@ -312,7 +311,7 @@ class SupercellMaker(object):
         A N * nbasis array.
         index[i] is the mapping from supercell to translated supercell so that
         T(r_i) psi = psi[indices[i]].
-    
+
         """
         a1 = Atoms(symbols='H', positions=[(0, 0, 0)], cell=[1, 1, 1])
         sc = make_supercell(a1, self._scmat)
@@ -392,8 +391,8 @@ def test():
     from ase.build import make_supercell
     atoms2 = make_supercell(atoms, sc_mat)
     atoms3 = spm.sc_atoms(atoms)
-    #print(atoms2.get_positions())
-    #print(atoms3.get_positions())
+    # print(atoms2.get_positions())
+    # print(atoms3.get_positions())
     assert (atoms2 == atoms3)
     assert (atoms2.get_positions() == atoms3.get_positions()).all()
 

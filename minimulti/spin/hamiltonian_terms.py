@@ -5,7 +5,6 @@ import numpy as np
 from collections import defaultdict
 from minimulti.constants import mu_0, Boltzmann
 import scipy.sparse as ssp
-import numba
 
 
 class HamTerm(object):
@@ -21,11 +20,15 @@ class HamTerm(object):
         self._hessian = None
         self._hessian_ijR = None
 
-    def eff_field(self, S, Heff):
+    def eff_field(self, S):
         r"""
         Hi = -1/ms_i * (\partial H/\partial Si)
         """
-        raise NotImplementedError
+        jac = self.jacobian(S)
+        return -jac
+
+    def jacobian(self):
+        raise NotImplementedError()
 
     def calc_hessian(self):
         raise NotImplementedError()
@@ -54,8 +57,17 @@ class SingleBodyTerm(HamTerm):
     def __init__(self, ms=None):
         super(SingleBodyTerm, self).__init__(ms=ms)
 
-    def eff_field(self, S, Heff):
-        raise NotImplementedError()
+    def func(self):
+        return np.sum((self.func_i for i in range(self.nmatoms)))
+
+    def func_i(self):
+        pass
+
+    def jacobian(self, S):
+        return np.array([self.jacobian_i(S, i) for i in range(self.nmatoms)])
+
+    def jacobian_i(self, S, i):
+        pass
 
     def calc_hessian(self):
         self._hessian = 0
@@ -71,10 +83,23 @@ class TwoBodyTerm(HamTerm):
     def __init__(self, ms=None):
         super(TwoBodyTerm, self).__init__(ms=ms)
 
-    def eff_field(self, S, Heff):
+    def func(self, S):
+        E = 0.0
+        for i, j in self.pair_list:
+            if i != j:
+                E += self.func_ij(S, i, j)
+        return E
+
+    def func_ij(self, i, j):
+        raise NotImplementedError()
+
+    def jacobian(self, S):
         r"""
         \partial H/\partial Si
         """
+        raise NotImplementedError()
+
+    def jacobian_i(self, S, i):
         raise NotImplementedError()
 
     def is_twobody_term(self):
@@ -90,12 +115,12 @@ class ZeemanTerm(SingleBodyTerm):
         super(ZeemanTerm, self).__init__(ms)
         self.H = H
 
-    def eff_field(self, S, Heff):
+    def eff_field(self, S):
         r"""
         Hi = -1/ms_i * (\partial H/\partial Si)
         It is here because it is simpler than the form of jacobian. Therefore faster.
         """
-        Heff[:, :] += self.H * self.ms[:, None]
+        return self.H * self.ms[:, None]
 
 
 class UniaxialMCATerm(TwoBodyTerm):
@@ -114,8 +139,8 @@ class UniaxialMCATerm(TwoBodyTerm):
     def func_i(self, S, i):
         return -self.Ku[i] * np.dot(S[i], self.e[i])**2
 
-    def eff_field(self, S, Heff):
-        Heff[:, :] -= self.hessian().dot(S.reshape(3 * self.nmatoms)).reshape(
+    def eff_field(self, S):
+        return -self.hessian().dot(S.reshape(3 * self.nmatoms)).reshape(
             self.nmatoms, 3)
 
     def calc_hessian(self):
@@ -152,8 +177,8 @@ class HomoUniaxialMCATerm(SingleBodyTerm):
     def jacobian_i(self, S, i):
         return -2.0 * self.Ku * np.dot(S[i], self.e) * self.e
 
-    def eff_field(self, S, Heff):
-        Heff += 2.0 * self.Ku * np.outer(
+    def eff_field(self, S):
+        return 2.0 * self.Ku * np.outer(
             np.einsum('ij,j,i->i', S, self.e, 1), self.e)
 
 
@@ -180,19 +205,16 @@ class ExchangeTerm(TwoBodyTerm):
         self.nij = self.vallist.shape[0]
         self.Heff = np.zeros((self.nmatoms, 3))
 
-    def eff_field(self, S, Heff):
-        S.shape = (self.nmatoms * 3)
-        Heff.shape = (self.nmatoms * 3)
-        Heff -= 2.0 * self.hessian().dot(S)
-        S.shape = (self.nmatoms, 3)
-        Heff.shape = (self.nmatoms, 3)
+    def jacobian(self, S):
+        self.jac = -2.0 * self.hessian().dot(S.reshape(
+            self.nmatoms * 3)).reshape(self.nmatoms, 3)
         return self.jac
 
     def calc_hessian(self):
-        self._hessian = ssp.lil_matrix(
-            (self.nmatoms * 3, self.nmatoms * 3), dtype=float)
+        self._hessian = ssp.lil_matrix((self.nmatoms * 3, self.nmatoms * 3),
+                                       dtype=float)
         for i, j, val in zip(self.ilist, self.jlist, self.vallist):
-            self._hessian[i * 3:i * 3 + 3, j * 3:j * 3 + 3] -= np.eye(3) * val
+            self._hessian[i * 3:i * 3 + 3, j * 3:j * 3 + 3] += np.eye(3) * val
 
         self._hessian = ssp.csr_matrix(self._hessian)
         return self._hessian
@@ -201,7 +223,7 @@ class ExchangeTerm(TwoBodyTerm):
         self._hessian_ijR = {}
         for key, val in self.Jdict.items():
             i, j, R = key
-            self._hessian_ijR[(i, j, R)] = -np.eye(3) * val
+            self._hessian_ijR[(i, j, R)] = np.eye(3) * val
         return self._hessian_ijR
 
 
@@ -229,17 +251,14 @@ class DMITerm(TwoBodyTerm):
         self.nij = self.vallist.shape[0]
         self.Heff = np.zeros((self.nmatoms, 3))
 
-    def eff_field(self, S, Heff):
-        S.shape = self.nmatoms * 3
-        jac = 2.0 * self.hessian().dot(S)
-        S.shape = (self.nmatoms, 3)
-        jac.shape = (self.nmatoms, 3)
-        Heff[:, :] -= jac
-        return jac
+    def jacobian(self, S):
+        return self.hessian().dot(S.reshape(3 * self.nmatoms)).reshape(
+            self.nmatoms, 3)
 
     def calc_hessian(self):
-        self._hessian = ssp.lil_matrix(
-            (self.nmatoms * 3, self.nmatoms * 3), dtype=float)
+        #self._hessian = np.zeros(self.nmatoms * 3, self.nmatoms * 3)
+        self._hessian = ssp.lil_matrix((self.nmatoms * 3, self.nmatoms * 3),
+                                       dtype=float)
         for i, j, val in zip(self.ilist, self.jlist, self.vallist):
             self._hessian[i * 3:i * 3 + 3, j * 3:j * 3 + 3] += np.array(
                 [[0, val[2], -val[1]], [-val[2], 0, val[0]],
@@ -254,6 +273,50 @@ class DMITerm(TwoBodyTerm):
             self._hessian_ijR[(i, j, R)] = np.array([[0, val[2], -val[1]],
                                                      [-val[2], 0, val[0]],
                                                      [val[1], -val[0], 0]])
+        return self._hessian_ijR
+
+
+class BilinearTerm(TwoBodyTerm):
+    """
+    Bilinear term
+    """
+
+    def __init__(self, bidict, ms):
+        """
+        J is given as a dict of {(i, j, R): val},
+         where R is a tuple, val is a scalar.
+        """
+        super(BilinearTerm, self).__init__(ms=ms)
+        self.bidict = bidict
+        bimat = defaultdict(float)
+        for key, val in self.bidict.items():
+            i, j, R = key
+            bimat[(i, j)] += np.array(val)
+
+        self.ilist, self.jlist = np.array(tuple(bimat.keys()), dtype='int').T
+        self.vallist = np.array(tuple(bimat.values()))
+        self.jac = np.zeros((self.nmatoms, 3))
+        self.nij = self.vallist.shape[0]
+        self.Heff = np.zeros((self.nmatoms, 3))
+
+    def jacobian(self, S):
+        return self.hessian().dot(S.reshape(3 * self.nmatoms)).reshape(
+            self.nmatoms, 3)
+
+    def calc_hessian(self):
+        #self._hessian = np.zeros(self.nmatoms * 3, self.nmatoms * 3)
+        self._hessian = ssp.lil_matrix((self.nmatoms * 3, self.nmatoms * 3),
+                                       dtype=float)
+        for i, j, val in zip(self.ilist, self.jlist, self.vallist):
+            self._hessian[i * 3:i * 3 + 3, j * 3:j * 3 + 3] += np.array(val)
+        self._hessian = ssp.csr_matrix(self._hessian)
+        return self._hessian
+
+    def calc_hessian_ijR(self):
+        self._hessian_ijR = {}
+        for key, val in self.bidict.items():
+            i, j, R = key
+            self._hessian_ijR[(i, j, R)] = np.array(val)
         return self._hessian_ijR
 
 

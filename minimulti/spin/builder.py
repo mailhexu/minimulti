@@ -20,7 +20,7 @@ def exchange_1d_hamiltonian(J1=3e-21,
         spinat=spin,
         zion=atoms.get_atomic_numbers())
     ham.gilbert_damping = [0.8]
-    #ham.gyro_ratio=[1.0]
+    # ham.gyro_ratio=[1.0]
 
     J = {
         (0, 0, (1, 0, 0)): J1,
@@ -36,10 +36,10 @@ def exchange_1d_hamiltonian(J1=3e-21,
 
     DMIval = np.array(DMI)
     DMI = {
-        #(0, 0, (0, 0, 1)): DMIval,
-        #(0, 0, (0, 0, -1)): -DMIval,
-        #(0, 0, (0, 1, 0)): DMIval,
-        #(0, 0, (0, -1, 0)): -DMIval,
+        # (0, 0, (0, 0, 1)): DMIval,
+        # (0, 0, (0, 0, -1)): -DMIval,
+        # (0, 0, (0, 1, 0)): DMIval,
+        # (0, 0, (0, -1, 0)): -DMIval,
         (0, 0, (-1, 0, 0)):
         -DMIval,
         (0, 0, (1, 0, 0)):
@@ -52,7 +52,7 @@ def exchange_1d_hamiltonian(J1=3e-21,
 
 def canting_1d_hamiltonian(
         J1=3e-21,
-        #J2=0e-21,
+        # J2=0e-21,
         DMI1=[0, 0, 0e-21],
         DMI2=[0, 0, -0e-21],
         k1=np.array([-0 * mu_B]),
@@ -68,13 +68,13 @@ def canting_1d_hamiltonian(
         spinat=spin,
         zion=atoms.get_atomic_numbers())
     ham.gilbert_damping = [0.8]
-    #ham.gyro_ratio=[1.0]
+    # ham.gyro_ratio=[1.0]
 
     J = {
         (0, 0, (1, 0, 0)): J1,
         (0, 0, (-1, 0, 0)): J1,
-        #(0, 0, (2, 0, 0)): J2,
-        #(0, 0, (-2, 0, 0)): J2,
+        # (0, 0, (2, 0, 0)): J2,
+        # (0, 0, (-2, 0, 0)): J2,
     }
     ham.set_exchange_ijR(exchange_Jdict=J)
 
@@ -98,7 +98,7 @@ def canting_1d_hamiltonian(
 
 def square_2d_hamiltonian(Jx=-5e-21,
                           Jy=-5e-21,
-                          dmi=5e-21,
+                          dmi=0e-21,
                           k1=np.array([-000 * mu_B]),
                           k1dir=np.array([[0.0, 0, 1.0]])):
     atoms = Atoms(
@@ -122,8 +122,8 @@ def square_2d_hamiltonian(Jx=-5e-21,
     ham.set_exchange_ijR(exchange_Jdict=J)
     DMI = {
         (0, 0, (1, 0, 0)): [0, -dmi, 0],
-        (0, 0, (-1, 0, 0)): [0,dmi, 0],
-        (0, 0, (0, 1, 0)): [dmi,0, 0 ],
+        (0, 0, (-1, 0, 0)): [0, dmi, 0],
+        (0, 0, (0, 1, 0)): [dmi, 0, 0],
         (0, 0, (0, -1, 0)): [-dmi, 0, 0],
     }
     ham.set_dmi_ijR(dmi_ddict=DMI)
@@ -196,10 +196,10 @@ def cubic_3d_hamiltonian(Jx=-0e-21,
     DMI = {
         (0, 0, (0, 0, 1)): DMIval,
         (0, 0, (0, 0, -1)): -DMIval,
-        #(0, 0, (0, 1, 0)): DMIval,
-        #(0, 0, (0, -1, 0)): -DMIval,
-        #(0, 0, (-1, 0, 0)): -DMIval,
-        #(0, 0, (1, 0, 0)): DMIval,
+        # (0, 0, (0, 1, 0)): DMIval,
+        # (0, 0, (0, -1, 0)): -DMIval,
+        # (0, 0, (-1, 0, 0)): -DMIval,
+        # (0, 0, (1, 0, 0)): DMIval,
     }
     ham.set_dmi_ijR(dmi_ddict=DMI)
     return ham
@@ -237,13 +237,13 @@ def cubic_3d_2site_hamiltonian(Jx=-0e-21,
     DMIval = np.array(DMI)
     DMI = {
         (0, 1, (0, 0, 0)): DMIval,
-        #(1, 0, (0, 0, 0)): -DMIval,
+        # (1, 0, (0, 0, 0)): -DMIval,
         (0, 1, (-1, 0, 0)): DMIval,
-        #(1, 0, (1, 0, 0)): -DMIval,
-        #(0, 0, (0, 1, 0)): DMIval,
-        #(0, 0, (0, -1, 0)): -DMIval,
-        #(0, 0, (-1, 0, 0)): -DMIval,
-        #(0, 0, (1, 0, 0)): DMIval,
+        # (1, 0, (1, 0, 0)): -DMIval,
+        # (0, 0, (0, 1, 0)): DMIval,
+        # (0, 0, (0, -1, 0)): -DMIval,
+        # (0, 0, (-1, 0, 0)): -DMIval,
+        # (0, 0, (1, 0, 0)): DMIval,
     }
     sc_ham.set_dmi_ijR(dmi_ddict=DMI)
     return sc_ham
