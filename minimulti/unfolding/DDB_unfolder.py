@@ -132,7 +132,7 @@ def DDB_unfolder(
     freqs = evals
     xpts = []
     for ix, xx in enumerate(x):
-        for q in kpath_bounds:
+        for q in sc_kpath_bounds:
             if np.sum((np.array(qpoints[ix]) - np.array(q)) **
                       2) < 0.00000001 and ix not in xpts:
                 xpts.append(ix)
