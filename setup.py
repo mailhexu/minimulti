@@ -5,7 +5,7 @@ long_description = """minimulti is a python framework of effective potentials, i
 
 setup(
     name='minimulti',
-    version='0.3.3',
+    version='0.3.9',
     description='Mini Extendable framework of multi Hamiltonian',
     long_description=long_description,
     author='Xu He',
@@ -13,14 +13,14 @@ setup(
     license='GPLv3',
     packages=find_packages(),
     package_data={},
-    install_requires=['numpy', 'scipy',  'matplotlib', 'ase', 'numba', 
-        'tbmodels', 
-        'netcdf4',
-        #'ipyvolumn'
-        'jupyter',
-        ],
+    install_requires=['numpy', 'scipy',  'matplotlib', 'ase', 'numba',
+                      'tbmodels',
+                      'netcdf4',
+                      # 'ipyvolumn'
+                      'jupyter',
+                      ],
     scripts=[
-        ],
+    ],
     classifiers=[
         'Development Status :: 3 - Alpha',
     ])

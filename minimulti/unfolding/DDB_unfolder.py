@@ -1,17 +1,18 @@
 #!/usr/bin/env python
+from .plotphon import plot_band_weight
+from .phonon_unfolder import phonon_unfolder
+import sys
+import matplotlib.pyplot as plt
+from ase.dft.kpoints import get_special_points, bandpath
+from ase.build import bulk
+from ase.io import write
+import numpy as np
 has_abipy = False
 try:
     import abipy.abilab as abilab
     has_abipy = True
 except:
     has_abipy = False
-import numpy as np
-from ase.build import bulk
-from ase.dft.kpoints import get_special_points, bandpath
-import matplotlib.pyplot as plt
-import sys
-from .phonon_unfolder import phonon_unfolder
-from .plotphon import plot_band_weight
 
 atomic_masses = np.array([
     1., 1.008, 4.002602, 6.94, 9.0121831, 10.81, 12.011, 14.007, 15.999,
@@ -89,15 +90,21 @@ def DDB_unfolder(
     numbers = struct.atomic_numbers
     masses = [atomic_masses[i] for i in numbers]
 
+    sc_kpath_bounds = np.dot(kpath_bounds, sc_mat)
+
     phbst, phdos = DDB.anaget_phbst_and_phdos_files(
-        nqsmall=2,
+        nqsmall=0,
         asr=1,
         chneut=1,
         dipdip=dipdip,
         verbose=1,
-        ndivsm=40,
+        ngqpt=[1, 1, 1],
+        #ngqpt=[4, 4, 4],
+        ndivsm=10,
         lo_to_splitting=True,
-        qptbounds=kpath_bounds,
+        qptbounds=sc_kpath_bounds,
+        dipquad=0,
+        quadquad=0,
     )
     qpoints = phbst.qpoints.frac_coords
     nqpts = len(qpoints)
@@ -106,7 +113,7 @@ def DDB_unfolder(
     evecs = np.zeros([nqpts, nbranch, nbranch], dtype='complex128')
 
     m = np.sqrt(np.kron(masses, [1, 1, 1]))
-    #positions=np.kron(scaled_positions,[1,1,1])
+    # positions=np.kron(scaled_positions,[1,1,1])
 
     for iqpt, qpt in enumerate(qpoints):
         for ibranch in range(nbranch):
@@ -126,14 +133,14 @@ def DDB_unfolder(
     xpts = []
     for ix, xx in enumerate(x):
         for q in kpath_bounds:
-            if np.sum((np.array(qpoints[ix]) - np.array(q))**
-                      2) < 0.00001 and ix not in xpts:
+            if np.sum((np.array(qpoints[ix]) - np.array(q)) **
+                      2) < 0.00000001 and ix not in xpts:
                 xpts.append(ix)
     if knames is None:
         knames = [str(k) for k in kpath_bounds]
     ax = plot_band_weight([list(x)] * freqs.shape[1],
                           freqs.T * 8065.6,
-                          weights[:, :].T * 0.98 + 0.01,
+                          weights[:, :].T * 0.95 + 0.01,
                           xticks=[knames, xpts],
                           style='alpha')
     return ax
@@ -143,7 +150,7 @@ def nc_unfolder(fname,
                 sc_mat,
                 kx=None,
                 knames=None,
-                ghost_atoms=None,
+                # ghost_atoms=None,
                 plot_width=False,
                 weight_multiplied_by=None):
     if not has_abipy:
@@ -158,14 +165,14 @@ def nc_unfolder(fname,
     numbers = struct.atomic_numbers
     masses = [atomic_masses[i] for i in numbers]
 
-    #print numbers
-    #print cell
-    #print scaled_positions
+    # print numbers
+    # print cell
+    # print scaled_positions
 
-    #print kpath_bounds
+    # print kpath_bounds
 
     phbst = ncfile.phbands
-    #phbst.plot_phbands()
+    # phbst.plot_phbands()
     qpoints = phbst.qpoints.frac_coords
     nqpts = len(qpoints)
     nbranch = 3 * len(numbers)
@@ -173,7 +180,7 @@ def nc_unfolder(fname,
     evecs = np.zeros([nqpts, nbranch, nbranch], dtype='complex128')
 
     m = np.sqrt(np.kron(masses, [1, 1, 1]))
-    #positions=np.kron(scaled_positions,[1,1,1])
+    # positions=np.kron(scaled_positions,[1,1,1])
     freqs = phbst.phfreqs
     displ_carts = phbst.phdispl_cart
 
@@ -181,12 +188,12 @@ def nc_unfolder(fname,
         print(iqpt, qpt)
         for ibranch in range(nbranch):
             #phmode = ncfile.get_phmode(qpt, ibranch)
-            #print(2)
+            # print(2)
             evals[iqpt, ibranch] = freqs[iqpt, ibranch]
             #evec=phmode.displ_cart *m
             #phase = [np.exp(-2j*np.pi*np.dot(pos,qpt)) for pos in scaled_positions]
             #phase = np.kron(phase,[1,1,1])
-            #evec*=phase
+            # evec*=phase
             #evec /= np.linalg.norm(evec)
             evec = displacement_cart_to_evec(displ_carts[iqpt, ibranch, :],
                                              masses,
@@ -200,7 +207,9 @@ def nc_unfolder(fname,
                          evecs,
                          qpoints,
                          phase=False,
-                         ghost_atoms=ghost_atoms)
+                         # ghost_atoms=ghost_atoms
+                         )
+    write("atoms.vasp", atoms, vasp5=True, sort=True)
     weights = uf.get_weights()
     if plot_width:
         weights = (weights * (1.0 - weights))**(0.5)
@@ -224,7 +233,7 @@ def main():
     # kpath in primitive cell
     kpoints = np.array([(0, 0, 0), (0, .5, 0), (0.5, 0.5, 0), [.5, .5, .5],
                         [0, 0, 0]])
-    # Note the k.sc_mat should be used instead of k. 
+    # Note the k.sc_mat should be used instead of k.
     DDB_unfolder(DDB_fname='out_DDB',
                  kpath_bounds=[np.dot(k, sc_mat) for k in kpoints],
                  sc_mat=sc_mat, knames=['$\Gamma$', 'X', 'M', 'R', '$\Gamma$'])
