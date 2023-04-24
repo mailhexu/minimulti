@@ -318,7 +318,7 @@ class etb_model(mytbmodel):
                          emax=emax,
                          nedos=nedos, nspin=self._nspin, efermi=self._efermi)
         if fname is not None:
-            #np.savetxt(fname,
+            # np.savetxt(fname,
             #           np.vstack((self.pdos.get_energy() - self._efermi,
             #                      self.pdos.get_pdos())),
             #           header='efermi=%s' % self._efermi)
@@ -360,11 +360,11 @@ class etb_model(mytbmodel):
         if self._verbose:
             print("Calc density matrix")
 
-        #1 if occupations are not calculated, calculate it.
+        # 1 if occupations are not calculated, calculate it.
         if self._occupations is None:
             self.get_occupations(self._nel, self._width, refresh=True)
 
-        #if self._U_spin_indexed:
+        # if self._U_spin_indexed:
         self._rho.density_matrix_kspace(self._eigenvecs,
                                         self._occupations,
                                         self._kweights,
@@ -425,8 +425,8 @@ class etb_model(mytbmodel):
         if not self._has_rho:
             self.get_density_matrix()
         self._ham_U, self._U_energy = self._U_term.V_and_E(self._rho)
-        #print(self._rho.rho)
-        #print(self._ham_U)
+        # print(self._rho.rho)
+        # print(self._ham_U)
 
         self._Uband_energy = -np.sum(self._ham_U * self._rho.density_matrix)
         #self._Uband_energy = self._U_term.E_Uband
@@ -438,7 +438,7 @@ class etb_model(mytbmodel):
                 self._rho)
 
     def calc_energy_from_rho(self, rhok, rho):
-        #band_energy
+        # band_energy
         tb_energy = 0.0
         for hami, rhoki in zip(self._ham0_k, rhok):
             tb_energy += np.sum(hami * rhoki)
@@ -468,7 +468,7 @@ class etb_model(mytbmodel):
         # check that matrix is hermitian
         if np.max(ham_use - ham_use.T.conj()) > 1.0E-9:
             raise Exception("\n\nHamiltonian matrix is not hermitian?!")
-        #solve matrix
+        # solve matrix
         if eig_vectors == False:  # only find eigenvalues
             evals = np.zeros(self._nspin, self._nband)
             evals[0] = np.linalg.eigvalsh(ham_use[::2, ::2])
@@ -583,7 +583,7 @@ class etb_model(mytbmodel):
         mu = self.get_fermi_level()
         e = 0
 
-        #mu=self._efermi
+        # mu=self._efermi
         for ik, kpt in enumerate(self._kpts):
             for ispin in range(self._nspin):
                 eig_k = np.real(self._eigenvals[ik, ispin, :])
@@ -646,7 +646,7 @@ class etb_model(mytbmodel):
         self.get_occupations(self._nel, self._width, refresh=False)
         self.get_density_matrix()
         self._TBnoU_energy = self.get_energy()
-        #self.randomize_rho()
+        # self.randomize_rho()
         self._has_rho = True
         self._total_energy = self._TBnoU_energy
         if self._save_density:
@@ -672,7 +672,7 @@ class etb_model(mytbmodel):
         if tol_rho is None:
             tol_rho = self._tol_rho
 
-        #1 initialize
+        # 1 initialize
 
         # initialize by reading density file
         if self._load_density and os.path.exists(self._density_file):
@@ -700,7 +700,7 @@ class etb_model(mytbmodel):
             self._rho = tmp
             self._has_rho = True
 
-        #2 iterative solve
+        # 2 iterative solve
         last_E = np.inf
 
         mixer = PulayMixer(mixing_constant=self._mixing,
@@ -754,7 +754,7 @@ class etb_model(mytbmodel):
             print("Writting density files to %s." % self._density_file)
             self.save_density()
 
-        #self.save_result()
+        # self.save_result()
         return self._total_energy
 
     def save_result(self, pfname=None):
@@ -788,7 +788,7 @@ class etb_model(mytbmodel):
         logging.info("=========================================")
 
         logging.info("Basis set:")
-        #for b in self.bset:
+        # for b in self.bset:
         #    logging.info("%s" % (b, ))
 
         logging.info("Kpoints:")
@@ -811,13 +811,13 @@ class etb_model(mytbmodel):
         with open(pfname, 'wb') as myfile:
             pickle.dump(self._results, myfile)
 
-    def plot_dos(self, split_spin=True, ax=None):
+    def plot_dos(self, split_spin=True, ax=None, width=0.1):
         efermi = self.get_fermi_level()
         if ax is None:
             fig, ax = plt.subplots()
         if split_spin and self._actual_nspin == 2:
-            e, dos_up = self.get_dos(spin=0)
-            e, dos_dn = self.get_dos(spin=1)
+            e, dos_up = self.get_dos(spin=0, width=width)
+            e, dos_dn = self.get_dos(spin=1, width=width)
             ax.plot(e, dos_up)
             ax.plot(e, -dos_dn)
             ax.axhline(color='black')
@@ -873,7 +873,8 @@ class etb_model(mytbmodel):
         kvectors = [np.dot(k, supercell_matrix) for k in kvectors]
         kpts, x, X = bandpath(kvectors, self.atoms.cell, npoints)
         kslist = [x] * len(self._orb)
-        evals, wkslist = self.unfold(kpts, supercell_matrix)  #.T * 0.98 + 0.01
+        evals, wkslist = self.unfold(
+            kpts, supercell_matrix)  # .T * 0.98 + 0.01
         wkslist = wkslist.T * 0.98 + 0.01
         ekslist = evals
         ax = plot_band_weight(kslist,
@@ -1144,7 +1145,7 @@ class etb_model(mytbmodel):
                                   axis=axis)
         return ax
 
-    #def plot_epc_dos(self, onsite=True, axis=None):
+    # def plot_epc_dos(self, onsite=True, axis=None):
     def get_epc_dos(self,
                     epc,
                     onsite=True,
@@ -1211,16 +1212,16 @@ class atoms_model(etb_model):
                 raise ValueError(
                     'basis_dict and basis_set should not both be None')
             etb_model.__init__(self, dim_k=3,
-                                 dim_r=3,
-                                 lat=self.atoms.cell,
-                                 orb=self.bset.get_scaled_positions(),
-                                 nspin=nspin)
+                               dim_r=3,
+                               lat=self.atoms.cell,
+                               orb=self.bset.get_scaled_positions(),
+                               nspin=nspin)
         else:
             etb_model.__init__(self, dim_k=3,
-                                 dim_r=3,
-                                 lat=np.eye(3),
-                                 orb=self.bset.get_scaled_positions(),
-                                 nspin=nspin)
+                               dim_r=3,
+                               lat=np.eye(3),
+                               orb=self.bset.get_scaled_positions(),
+                               nspin=nspin)
 
         self._has_rho = False
         self.Utype = None
@@ -1252,14 +1253,14 @@ class atoms_model(etb_model):
                                  DC=DC,
                                  DC_shift=DC_shift,
                                  DC_type=DC_type)
-            #uterm = Hubbard_U_Dudarev(
+            # uterm = Hubbard_U_Dudarev(
             #    bset=self.bset,
             #    Hubbard_dict=Hubbard_dict,
             #    DC=False,
             #    DC_shift=DC_shift)
             self._diag_only = False
         elif Utype == 'Liechtenstein' or Utype == 1:
-            #uterm = Hubbard_U_Liechtenstein(
+            # uterm = Hubbard_U_Liechtenstein(
             #    bset=self.bset,
             #    Hubbard_dict=Hubbard_dict,
             #    DC=DC,
@@ -1272,7 +1273,7 @@ class atoms_model(etb_model):
                                       DC_type=DC_type)
             self._diag_only = False
         elif Utype == 'Kanamori' or Utype == 3:
-            #uterm = Hubbard_U_Kanamori(
+            # uterm = Hubbard_U_Kanamori(
             uterm = Kanamori_term(bset=self.bset,
                                   Hubbard_dict=Hubbard_dict,
                                   DC=DC,
@@ -1409,23 +1410,24 @@ def test_atoms_model():
     model.set_hop(t, 1, 1, ind_R=(0, 1, 0))
     model.set_hop(t, 0, 0, ind_R=(0, 0, 1))
     model.set_hop(t, 1, 1, ind_R=(0, 0, 1))
-    #print(model.atoms)
-    #print(model.bset)
-    #print(model.bset.get_scaled_positions())
-    #print(model._U_term.bset)
-    #print(model._U_term.Udict)
+    # print(model.atoms)
+    # print(model.bset)
+    # print(model.bset.get_scaled_positions())
+    # print(model._U_term.bset)
+    # print(model._U_term.Udict)
 
     sc_mat = np.diag([3, 3, 3])
     scmodel = model.make_supercell(sc_mat)
-    scmodel.set_Hubbard_U(Utype='Kanamori', Hubbard_dict={'H': {'L':0, 'U': 12, 'J': 0}})
+    scmodel.set_Hubbard_U(Utype='Kanamori', Hubbard_dict={
+                          'H': {'L': 0, 'U': 12, 'J': 0}})
     scmodel.set_initial_spin([1.0] * 26 + [1])
-    #print(scmodel.atoms)
-    #print(scmodel.bset)
-    #print(scmodel.bset.get_scaled_positions())
-    #print(scmodel._U_term.bset)
-    #print(scmodel._U_term.Udict)
-    #print(model._hoppings)
-    #print(scmodel._hoppings)
+    # print(scmodel.atoms)
+    # print(scmodel.bset)
+    # print(scmodel.bset.get_scaled_positions())
+    # print(scmodel._U_term.bset)
+    # print(scmodel._U_term.Udict)
+    # print(model._hoppings)
+    # print(scmodel._hoppings)
 
     #scmodel.set(nel=15.9, mixing=0.5)
     scmodel.set(nel=27, mixing=0.5)

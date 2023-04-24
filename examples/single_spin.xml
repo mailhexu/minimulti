@@ -1,0 +1,3 @@
+<System_definition><unitcell units="bohrradius">1.88973e+00	0.00000e+00	0.00000e+00	
+0.00000e+00	1.88973e+00	0.00000e+00	
+0.00000e+00	0.00000e+00	1.88973e+00</unitcell><atom damping_factor="1.00000e+00" gyroratio="1.00000e+00" index_spin="1" mass="1.00800e+00" massunits="atomicmassunit"><position units="bohrradius">0.00000e+00	0.00000e+00	0.00000e+00</position><spinat>0.00000e+00	1.00000e+00	0.00000e+00</spinat></atom></System_definition>

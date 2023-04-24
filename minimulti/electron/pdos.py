@@ -8,7 +8,7 @@ import numba
 @numba.njit()
 def gaussian(x, sigma):
     return 1.0 / np.sqrt(2 * np.pi) / sigma * \
-            np.exp(-x**2 / 2.0 / sigma**2)
+        np.exp(-x**2 / 2.0 / sigma**2)
 
 
 @numba.njit()
@@ -35,13 +35,13 @@ class PDOS(object):
         self.emin = emin
         self.emax = emax
         self.nedos = nedos
-        #evecs <band, kpt, orb>
-        #evals <band, kpt>
+        # evecs <band, kpt, orb>
+        # evals <band, kpt>
         self.elist = np.linspace(emin, emax, nedos)
         self.nspin = nspin
         self.pdos = np.zeros((self.nspin, self.norb, self.nedos),
                              dtype='float')
-        self.efermi=efermi
+        self.efermi = efermi
         self._calc_dos()
 
     def _calc_dos(self):
@@ -61,18 +61,19 @@ class PDOS(object):
         return np.sum(self.pdos, axis=(0, 1))
 
     def save_txt(self, fname):
-        a=np.vstack([self.elist-self.efermi] + [self.pdos[i] for i in range(self.nspin)]).T
-        np.savetxt(fname, a, header=f"energy, spinup, spindown\n  efermi={self.efermi}, nspin={self.nspin}, nedos={self.nedos} ")
+        a = np.vstack([self.elist-self.efermi] + [self.pdos[i]
+                                                  for i in range(self.nspin)]).T
+        np.savetxt(
+            fname, a, header=f"energy, spinup, spindown\n  efermi={self.efermi}, nspin={self.nspin}, nedos={self.nedos} ")
 
     def save_pickle(self, fname):
         with open(fname, 'wb') as myfile:
-            myfile.write({'nspin':self.nspin, 
+            myfile.write({'nspin': self.nspin,
                           'nedos': self.nedos,
-                          'energy': self.elist, 
-                          'pdos': self.pdos, 
-                          'efermi':self.efermi})
-                
-                
+                          'energy': self.elist,
+                          'pdos': self.pdos,
+                          'efermi': self.efermi})
+
 
 class WDOS(object):
     def __init__(self, kpts, kweights, sigma, evals, weights, emin, emax,
@@ -85,7 +86,7 @@ class WDOS(object):
         self.emin = emin
         self.emax = emax
         self.nedos = nedos
-        #evals <band, kpt>
+        # evals <band, kpt>
         self.elist = np.linspace(emin, emax, self.nedos)
         self.dx = self.elist[1] - self.elist[0]
         self.wdos = np.zeros(self.nedos, dtype='float')

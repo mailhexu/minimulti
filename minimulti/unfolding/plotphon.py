@@ -8,6 +8,7 @@ from ase.units import Bohr
 import os.path
 from collections import namedtuple
 
+
 def plot_band_weight(kslist,
                      ekslist,
                      wkslist=None,
@@ -40,12 +41,16 @@ def plot_band_weight(kslist,
         yrange = (np.array(ekslist).flatten().min() - 66,
                   np.array(ekslist).flatten().max() + 66)
 
+    # normalize
+    wkslist /= np.max(np.abs(wkslist))
+    wkslist *= 0.99
+
     if wkslist is not None:
-        for i in range(len(kslist)): # number of bands
+        for i in range(len(kslist)):  # number of bands
             x = kslist[i]            # bandx
             y = ekslist[i]           # band energy
             lwidths = np.array(wkslist[i]) * width
-            #lwidths=np.ones(len(x))
+            # lwidths=np.ones(len(x))
             points = np.array([x, y]).T.reshape(-1, 1, 2)
             segments = np.concatenate([points[:-1], points[1:]], axis=1)
             if style == 'width':
@@ -56,7 +61,7 @@ def plot_band_weight(kslist,
                     linewidths=[2] * len(x),
                     colors=[
                         colorConverter.to_rgba(
-                            color, alpha=np.abs(lwidth / (width + 0.001)))
+                            color, alpha=np.abs(lwidth / (width)))
                         for lwidth in lwidths
                     ])
 
@@ -74,5 +79,3 @@ def plot_band_weight(kslist,
         if efermi is not None:
             plt.axhline(linestyle='--', color='black')
     return a
-
-

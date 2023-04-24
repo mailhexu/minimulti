@@ -1,0 +1,15 @@
+# ANADB input for IFC
+ atifc
+ 1 2 3
+ 4 5
+ asr 2
+ ifcout 10000000
+ ngqpt 4 4 4
+ natifc 5
+ chneut 1
+ ifcana 1
+ dipdip 1
+ prt_ifc 1
+ ifcflag 1
+ nqshft 1
+ q1shft 0 0 0
