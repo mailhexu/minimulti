@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
-from collections import Iterable, defaultdict
+from collections.abc import Iterable
+from collections import defaultdict
 import matplotlib.pyplot as plt
 from ase.cell import Cell
 from ase.dft.kpoints import bandpath, monkhorst_pack

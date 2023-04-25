@@ -100,13 +100,15 @@ def plot_supercell(ham,
                    pbc=[1,1,1],
                    magfield=False,
                    ):
-    sc_ham = ham.make_supercell(supercell_matrix, pbc=pbc)
+    sc_ham = ham.make_supercell(supercell_matrix)
     def Hfunc(xcart):
         x, y, z = xcart
-        if x< 0.5:
-            return np.array([0,0,10.0])
+        if x< 0.2:
+            return np.array([100,0,0.0])
+        elif x> 0.8:
+            return np.array([-100,0,0.0])
         else:
-            return np.array([0,0,-10.0])
+            return np.array([0,0,0.0])
     if magfield:
         sc_ham.set_spatial_external_field(Hfunc)
     sc_ham.s = np.random.rand(*sc_ham.s.shape) - 0.5
@@ -117,7 +119,7 @@ def plot_supercell(ham,
     pos = np.dot(sc_ham.pos, sc_ham.cell)
     if plot_type == '2d':
         plot_2d_vector(
-            pos, mover.s, show_z=show_z, length=length, ylimit=ylimit, marker_size=marker_size)
+            pos, mover.s, show_z=show_z, length=length, ylimit=ylimit)
     elif plot_type == '3d':
         plot_3d_vector(pos, mover.s, length=length)
     elif plot_type == 'dynamic':

@@ -8,8 +8,6 @@ pip install . --user
 ```
 or in developer mode:
 ```
-python setup.py develop --user
-or
 pip install -e . --user
 ```
 
