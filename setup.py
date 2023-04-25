@@ -5,7 +5,7 @@ long_description = """minimulti is a python framework of effective potentials, i
 
 setup(
     name='minimulti',
-    version='0.3.12',
+    version='0.3.13',
     description='Mini Extendable framework of multi Hamiltonian',
     long_description=long_description,
     author='Xu He',
