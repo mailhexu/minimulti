@@ -1,7 +1,8 @@
 """
 Phonon unfolding: Reciprocal space method. The method is described in
 P. B. Allen et al. Phys Rev B 87, 085322 (2013).
-This method should be also applicable to other bloch waves on discrete grid, eg. electrons wave function in wannier basis set, magnons, etc. Now only phonon istested.
+This method should be also applicable to other bloch waves on discrete grid, 
+eg. electrons wave function in wannier basis set, magnons.
 """
 from ase.build import make_supercell
 from ase.atoms import Atoms
@@ -67,7 +68,9 @@ class Unfolder():
         index[i] is the mapping from supercell to translated supercell so that
         T(r_i) psi = psi[indices[i]].
 
-        TODO: vacancies/add_atoms not supported. How to do it? For vacancies, a ghost atom can be added. For add_atom, maybe we can just ignore them? Will it change the energy spectrum?
+        TODO: vacancies/add_atoms not supported. How to do it? For vacancies, 
+        a ghost atom can be added. For add_atom, maybe we can just ignore them? 
+        Will it change the energy spectrum?
         """
         a1 = Atoms(symbols='H', positions=[(0, 0, 0)], cell=[1, 1, 1])
         sc = make_supercell(a1, self._scmat)

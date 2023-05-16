@@ -1,7 +1,7 @@
 import numpy as np
 from pythtb import w90
-from .unfolder import Unfolder
-from .plotphon.plot import plot_band_weight
+from minimulti.unfolding.unfolder import Unfolder
+from minimulti.unfolding.plotphon.plot import plot_band_weight
 import matplotlib.pyplot as plt
 
 

@@ -110,17 +110,16 @@ def test_defect():
     plt.savefig('STO_defect.png')
     plt.show()
 
+
+
+
+
 def run(path, prefix,  labels, scmat, output_figure, kvectors, knames, npoints=200, min_hopping_norm=0.0001):
     w90reader = w90(path=path, prefix=prefix)
     tb = w90reader.model(min_hopping_norm=min_hopping_norm)
-    #labels = ['pz', 'px', 'py'] * 12 + ['dz2', 'dxy', 'dyz', 'dx2', 'dxz'] * 4
-    #scmat=[[1,-1,0],[1,1,0],[0,0,2]]
     u = wannier_unfolder(tb, labels, sc_matrix=scmat)
     u.plot_unfolded_band(
-            #kvectors=np.array([[0, 0, 0], [0.5, 0, 0], [0.5, 0.5, 0],
-            #                    [0, 0, 0], [.5, .5, .5]]),
             kvectors=kvectors,
-            #knames=['$\Gamma$', 'X', 'M', '$\Gamma$', 'R'],
             knames=knames,
             npoints=npoints,
             ax=None, 
@@ -128,15 +127,17 @@ def run(path, prefix,  labels, scmat, output_figure, kvectors, knames, npoints=2
     plt.savefig(output_figure)
     plt.show()
 
-if __name__=="__main__":
-    run(path='data',
-        prefix='wannier90',
-        scmat=[[1,-1,0], [1,1,0 ], [0,0,2]],
-        output_figure='unfold.png', 
+#-------------------------------Demo from here---------------------
+
+def run_nodefect():
+    run(path='data', # path of Wannier90 data
+        prefix='wannier90',   # prefix of Wannier90 hamiltonian
+        scmat=[[1,-1,0], [1,1,0 ], [0,0,2]],  # supercell matrix
+        output_figure='unfold.png',
         labels = ['pz', 'px', 'py'] * 12 + ['dz2', 'dxy', 'dyz', 'dx2', 'dxz'] * 4,
         kvectors=np.array([[0, 0, 0], [0.5, 0, 0], [0.5, 0.5, 0],
                          [0, 0, 0], [.5, .5, .5]]),
         knames=['$\Gamma$', 'X', 'M', '$\Gamma$', 'R'] )
 
-#test_nodefect()
+run_nodefect()
 #test_defect()
