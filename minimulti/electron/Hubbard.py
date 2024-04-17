@@ -213,11 +213,11 @@ class Hubbard_matrix_term(object):
         else:
             raise ValueError('DC_ype should be FLL-s or FLL-ns')
 
-        V_DC_diag = np.zeros(rho.shape[0], dtype=np.complex)
+        V_DC_diag = np.zeros(rho.shape[0], dtype=np.complex128)
         V_DC_diag[:] = -U * (n_tot - 0.5)
         V_DC_diag[::2] += J * (n_up - 0.5)
         V_DC_diag[1::2] += J * (n_dn - 0.5)
-        V_DC = np.zeros_like(rho, dtype=np.complex)
+        V_DC = np.zeros_like(rho, dtype=np.complex128)
         V_DC[np.diag_indices(rho.shape[0])] = V_DC_diag[:]
 
         # Note the minus is already here.
@@ -398,11 +398,11 @@ class Kanamori_term(Hubbard_matrix_term):
         else:
             raise ValueError('DC_ype should be FLL-s or FLL-ns')
 
-        V_DC_diag = np.zeros(rho.shape[0], dtype=np.complex)
+        V_DC_diag = np.zeros(rho.shape[0], dtype=np.complex128)
         V_DC_diag[:] = -Uavg * (n_tot - 0.5)
         V_DC_diag[::2] += Javg * (n_up - 0.5)
         V_DC_diag[1::2] += Javg * (n_dn - 0.5)
-        V_DC = np.zeros_like(rho, dtype=np.complex)
+        V_DC = np.zeros_like(rho, dtype=np.complex128)
         V_DC[np.diag_indices(rho.shape[0])] = V_DC_diag[:]
         # Note the minus is already here.
         E_DC = -0.5 * Uavg * n_tot * (n_tot - 1.0) + 0.5 * Javg * (
@@ -457,11 +457,11 @@ class Dudarev_term(Hubbard_matrix_term):
         else:
             raise ValueError('DC_ype should be FLL-s or FLL-ns')
 
-        V_DC_diag = np.zeros(rho.shape[0], dtype=np.complex)
+        V_DC_diag = np.zeros(rho.shape[0], dtype=np.complex128)
         V_DC_diag[:] = -Uavg * (n_tot - 0.5)
         V_DC_diag[::2] += Javg * (n_up - 0.5)
         V_DC_diag[1::2] += Javg * (n_dn - 0.5)
-        V_DC = np.zeros_like(rho, dtype=np.complex)
+        V_DC = np.zeros_like(rho, dtype=np.complex128)
         V_DC[np.diag_indices(rho.shape[0])] = V_DC_diag[:]
         # Note the minus is already here.
         E_DC = -0.5 * Uavg * n_tot * (n_tot - 1.0) + 0.5 * Javg * (
