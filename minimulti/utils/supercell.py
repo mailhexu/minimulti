@@ -5,6 +5,8 @@ import numpy as np
 from collections import OrderedDict, defaultdict
 from itertools import product
 from functools import lru_cache
+from ase import Atoms
+from ase.build import make_supercell
 
 
 def close_to_int(x, tol=1e-4):
@@ -27,7 +29,10 @@ class SupercellMaker(object):
         self.sc_matrix = sc_matrix
         self.center = center
         if center:
-            self.shift = np.array([0.5, 0.5, 0.5])
+            #self.shift = np.array([0.5, 0.5, 0.5]) 
+            a,b,c = np.diag(sc_matrix)
+            self.shift = np.floor([a/2,b/2,c/2])/np.array([a,b,c]) 
+            print(self.shift)
         else:
             self.shift = np.zeros(3, dtype=float)
         self.inv_scmat = np.linalg.inv(self.sc_matrix.T)
@@ -47,8 +52,8 @@ class SupercellMaker(object):
             2.0) * 1.0E-8  # shift of the grid, so to avoid double counting
         #max_R = np.max(np.abs(self.sc_matrix)) * 3
         if self.center:
-            minr = -0.5
-            maxr = 0.5
+            minr = 0.0-self.shift
+            maxr = 1.0-self.shift
         else:
             minr = 0.0
             maxr = 1.0
@@ -58,6 +63,7 @@ class SupercellMaker(object):
                                      [0., 1., 1.], [1., 0., 0.], [1., 0., 1.],
                                      [1., 1., 0.], [1., 1., 1.]])
         corners = np.dot(scorners_newcell - self.shift, newcell)
+        #corners = np.dot(scorners_newcell , newcell)
         scorners = corners
         #rep = np.ceil(scorners.ptp(axis=0)).astype('int') + 1
         minrep = np.ceil(np.min(scorners, axis=0)).astype('int')
@@ -88,6 +94,16 @@ class SupercellMaker(object):
         self.sc_vec = np.array(sc_vec)
         svtuple = (tuple(s) for s in sc_vec)
         self.sc_vec_dict = dict(zip(svtuple, range(sc_vec.shape[0])))
+        print(f"sc_vec: {self.sc_vec}")
+
+    def build_sc_vec_old(self):
+        atoms = Atoms('H', positions=[[0, 0, 0]], cell=np.eye(3))
+        scatoms = make_supercell(atoms, self.sc_matrix)
+        self.sc_vec = np.round( scatoms.get_positions()).astype(int)
+        svtuple = (tuple(s) for s in self.sc_vec)
+        self.sc_vec_dict = dict(zip(svtuple, range(self.sc_vec.shape[0])))
+        #print(f"sc_vec: {self.sc_vec}")
+
 
     def get_R(self):
         return self.sc_vec
@@ -112,7 +128,7 @@ class SupercellMaker(object):
             for pos in positions:
                 # shift orbital and compute coordinates in
                 # reduced coordinates of super-cell
-                sc_pos.append(self.to_red_sc(pos + cur_sc_vec))
+                sc_pos.append(self.to_red_sc(pos + cur_sc_vec)+self.shift)
                 sc_R.append(cur_sc_vec)
         if return_R:
             return sc_pos, sc_R
