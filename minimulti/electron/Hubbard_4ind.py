@@ -413,6 +413,9 @@ label_dict = {
     'dxz': 4
 }
 
+# in siesta : dxy, dyz, dz2, dxz, dx2-y2 are m=-2, -1, 0, 1, 2
+# thus, here the order is : 0, 2, -2, -1, 1
+
 
 class Hubbard_U_Liechtenstein(Hubbard_term):
     """
